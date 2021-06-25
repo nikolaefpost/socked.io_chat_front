@@ -1,15 +1,18 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
-import  Form  from 'react-bootstrap/Form';
+import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import React from 'react';
-import  io from "socket.io-client";
+
+import io from "socket.io-client";
+
 const ENDPOINT = "http://127.0.0.1:4001";
 
-class ItemMessage extends React.Component{
+
+class ItemMessage extends React.Component {
     render() {
-        return(
+        return (
             <>
-                <li>{this.props.text}</li>
+                <li className='py-2'>{this.props.text}</li>
             </>
         )
     }
@@ -18,62 +21,52 @@ class ItemMessage extends React.Component{
 export default class App extends React.Component {
     constructor() {
         super();
-        this.state={
-            response: []
+        this.state = {
+            allMessage: []
         }
         this.handleSubmit = this.handleSubmit.bind(this);
         this.responseField = React.createRef();
-        this.socket = io(ENDPOINT, { transports : ['websocket'] });
+        this.socket = io(ENDPOINT, {transports: ['websocket']});
     }
+
     componentDidMount() {
         this.socket.on('broadcast', (data) => {
-            this.setState({ response: data, connected: true })
-            console.log(this.state.response)
+            this.setState({allMessage: data, connected: true})
         });
 
         this.socket.on('disconnect', () => {
-            this.setState({ connected: false })
+            this.setState({connected: false})
         });
 
         this.socket.on('connection', () => {
-            this.setState({ connected: true })
+            this.setState({connected: true})
         });
     }
 
     handleSubmit(e) {
         let val = this.responseField.current.value;
-        if (val) {
-            this.socket.emit('message', val);
-        }
-        // this.setState({response: val});
+        if (val) this.socket.emit('message', val);
+        this.responseField.current.value = ''
     }
 
     render() {
         return (
             <div className='d-flex flex-column align-items-center'>
-                <ul className='col-5 list-unstyled'>
+                <h1 className='mt-5'>My chat</h1>
+                <ul className='col-6 p-4 list-unstyled bg-light text-dark rounded'>
                     {
-
-                        this.state.response.map(function(item){
-                            return <ItemMessage key={item} text={item} />
+                        this.state.allMessage.map(function (item) {
+                            return <ItemMessage key={item} text={item}/>
                         })
                     }
                 </ul>
-                <Form className='col-6 ' onClick={this.handleSubmit}>
-                    <Form.Group controlId="formBasicEmail">
-                        <Form.Label>Messages</Form.Label>
-                        <Form.Control type="text" placeholder="" ref={this.responseField}/>
-                    </Form.Group>
-                    <Button variant="primary" >
-                        Submit
-                    </Button>
+                <Form className='col-6 d-flex justify-content-between' onClick={this.handleSubmit}>
+                    <Form.Control className='mr-2' type="text"  ref={this.responseField}/>
+                    <Button variant="primary">Send</Button>
                 </Form>
             </div>
-
         );
     }
-
-
 }
 
 
